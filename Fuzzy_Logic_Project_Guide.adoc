@@ -1,0 +1,441 @@
+= Fuzzy Logic Project: Student Guide
+AI II Course
+:doctype: book
+:toc: left
+:toclevels: 2
+:sectnums:
+:icons: font
+:source-highlighter: rouge
+:rouge-style: github
+:pdf-theme: default
+:title-page:
+:chapter-label:
+
+== Project Overview
+
+This project asks you to design and implement a Fuzzy Logic System for a problem of your choosing. You will use the `fuzzylogic` Python package to create a fuzzy controller that takes crisp inputs (like sensor readings) and produces a crisp output (like a control action).
+
+=== What You're Building
+
+A complete fuzzy inference system consists of three main components:
+
+* *Input variables (antecedents)* — things you measure or observe
+* *Output variable (consequent)* — the decision or control action
+* *Rule base* — connects inputs to outputs through IF-THEN logic
+
+Your system should model a real-world decision-making process where precise numerical thresholds don't make sense, but fuzzy categories like "low," "medium," and "high" do.
+
+=== Problem Statement Format
+
+Your problem statement should follow this template:
+
+[quote]
+____
+"Based on [Input 1] and [Input 2], how [Output] is [Action/Decision]?"
+____
+
+The lecture example was: _"Based on Ammo Level and Distance to target, how Desirable is using a Rocket Launcher?"_
+
+[TIP]
+====
+Choose a problem you actually understand well. Good candidates include systems related to your work, hobbies, or everyday decisions. Avoid HVAC systems (explicitly prohibited) and overly complex domains.
+====
+
+== Getting Started
+
+=== Installing the Package
+
+Open your terminal or PyCharm's terminal and run:
+
+[source,bash]
+----
+pip install fuzzylogic
+----
+
+If you encounter permission issues, try:
+
+[source,bash]
+----
+pip install fuzzylogic --user
+----
+
+=== Required Resources
+
+Before you start coding, review these resources:
+
+* Package homepage: https://pypi.org/project/fuzzylogic/
+* Showcase notebook: https://github.com/amogorkon/fuzzylogic/blob/master/docs/Showcase.ipynb
+* Your lecture notes on fuzzy logic and the Rocket Launcher example
+
+=== Creating Your Project
+
+Create a new Python file in PyCharm (e.g., `fuzzy_system.py`). You'll write all your code from scratch—there's no starter code to download.
+
+== Fuzzy Logic Fundamentals
+
+=== Key Terminology
+
+[cols="1,3",options="header"]
+|===
+|Term |Definition
+
+|Crisp Value
+|A precise numerical input or output (e.g., distance = 45 meters)
+
+|Fuzzy Set
+|A category with gradual membership (e.g., "close," "medium," "far")
+
+|Membership Function
+|Defines how much a crisp value belongs to a fuzzy set (0 to 1)
+
+|Antecedent
+|An input variable in your system (you need at least 2)
+
+|Consequent
+|The output variable your system produces (you need 1)
+
+|Domain
+|The numerical range of possible values for a variable
+
+|Fuzzification
+|Converting crisp inputs to fuzzy membership values
+
+|Defuzzification
+|Converting fuzzy outputs back to crisp values
+|===
+
+=== Membership Function Types
+
+You are required to use both shoulder and triangular membership functions:
+
+Triangular (R)::
+Peaks at a single point and slopes down on both sides. Good for middle categories like "medium" or "average." Defined by three points: left foot, peak, right foot.
+
+Left Shoulder (S)::
+Starts at maximum membership (1.0) and slopes down to zero. Use for the lowest category in your range (e.g., "low," "close," "cold").
+
+Right Shoulder (S)::
+Starts at zero and slopes up to maximum membership (1.0). Use for the highest category in your range (e.g., "high," "far," "hot").
+
+== Building Your System Step by Step
+
+=== Step 1: Define Your Problem
+
+Write out your problem statement and identify your variables. Make sure you have:
+
+* At least 2 input variables (antecedents) — these are things you measure or observe
+* Exactly 1 output variable (consequent) — this is the decision or control action
+* A clear relationship between inputs and output that makes intuitive sense
+
+=== Step 2: Define Domains and Sets
+
+For each variable, determine the numerical range (domain) and create at least 3 fuzzy sets. Think carefully about what values make sense for your problem. This is where your domain knowledge becomes critical.
+
+[NOTE]
+====
+*Example:* For a "Temperature" variable measuring room temperature: Domain might be 0–100°F, with sets "cold" (0–50), "comfortable" (40–80), and "hot" (70–100). Notice the overlap between sets—this is intentional and allows for gradual transitions.
+====
+
+=== Step 3: Create Membership Functions
+
+Using the fuzzylogic library, define your domains and membership functions:
+
+[source,python]
+----
+from fuzzylogic.classes import Domain, Set, Rule
+from fuzzylogic.functions import R, S  # R = triangular, S = shoulder
+
+# Create a domain for your variable
+temperature = Domain("Temperature", 0, 100)  # name, min, max
+
+# Add fuzzy sets using membership functions
+# S(start, end) creates a shoulder function
+# R(left, peak, right) creates a triangular function
+temperature.cold = S(0, 50)       # Left shoulder: 1.0 at 0, drops to 0 at 50
+temperature.comfortable = R(40, 60, 80)  # Triangle: peaks at 60
+temperature.hot = S(70, 100)      # Right shoulder: 0 at 70, 1.0 at 100
+----
+
+=== Step 4: Build Your Rule Base
+
+With 2 antecedents and 3 sets each, you need 3 × 3 = 9 rules. Each rule maps a combination of input fuzzy sets to an output fuzzy set.
+
+[source,python]
+----
+# Example rule structure:
+# IF input1 is SET1 AND input2 is SET2 THEN output is RESULT
+
+rules = Rule({
+    (input1.low, input2.low): output.result1,
+    (input1.low, input2.medium): output.result2,
+    (input1.low, input2.high): output.result3,
+    (input1.medium, input2.low): output.result4,
+    (input1.medium, input2.medium): output.result5,
+    (input1.medium, input2.high): output.result6,
+    (input1.high, input2.low): output.result7,
+    (input1.high, input2.medium): output.result8,
+    (input1.high, input2.high): output.result9,
+})
+----
+
+=== Step 5: Test Your System
+
+Pass multiple test values through your system and print the crisp outputs. Choose test values that span your domain ranges.
+
+== Complete Code Example
+
+Here is a complete template showing the structure of a fuzzy logic system. This example demonstrates a tip calculator—*do not copy this exact problem; create your own*:
+
+[source,python]
+----
+from fuzzylogic.classes import Domain, Set, Rule
+from fuzzylogic.functions import R, S
+import matplotlib.pyplot as plt
+
+# Step 1: Define domains for all variables
+# Antecedent 1: Food Quality (0-10 scale)
+food = Domain("Food Quality", 0, 10, res=0.1)
+food.poor = S(0, 4)           # Left shoulder
+food.average = R(2, 5, 8)     # Triangular
+food.excellent = S(6, 10)     # Right shoulder
+
+# Antecedent 2: Service Quality (0-10 scale)
+service = Domain("Service Quality", 0, 10, res=0.1)
+service.poor = S(0, 4)
+service.average = R(2, 5, 8)
+service.excellent = S(6, 10)
+
+# Consequent: Tip Percentage (0-30%)
+tip = Domain("Tip", 0, 30, res=0.5)
+tip.low = S(0, 10)
+tip.medium = R(5, 15, 25)
+tip.high = S(20, 30)
+
+# Step 2: Save membership function graphs
+fig, axes = plt.subplots(1, 3, figsize=(15, 4))
+
+food.plot(axes[0])
+axes[0].set_title("Food Quality")
+
+service.plot(axes[1])
+axes[1].set_title("Service Quality")
+
+tip.plot(axes[2])
+axes[2].set_title("Tip Percentage")
+
+plt.tight_layout()
+plt.savefig("membership_functions.png", dpi=150)
+plt.close()
+
+# Step 3: Define the rule base (9 rules for 3x3)
+rules = Rule({
+    (food.poor, service.poor): tip.low,
+    (food.poor, service.average): tip.low,
+    (food.poor, service.excellent): tip.medium,
+    (food.average, service.poor): tip.low,
+    (food.average, service.average): tip.medium,
+    (food.average, service.excellent): tip.high,
+    (food.excellent, service.poor): tip.medium,
+    (food.excellent, service.average): tip.high,
+    (food.excellent, service.excellent): tip.high,
+})
+
+# Step 4: Test with multiple input values
+test_cases = [
+    (2, 3),   # Poor food, poor service
+    (5, 5),   # Average food, average service
+    (8, 9),   # Excellent food, excellent service
+    (3, 8),   # Poor food, excellent service
+    (9, 2),   # Excellent food, poor service
+]
+
+print("Fuzzy Tip Calculator Results")
+print("=" * 50)
+for food_val, service_val in test_cases:
+    result = rules(food(food_val), service(service_val))
+    print(f"Food: {food_val}, Service: {service_val} -> Tip: {result:.1f}%")
+----
+
+[WARNING]
+====
+The exact syntax may vary slightly between library versions. Always check the Showcase notebook for the most current syntax if you encounter errors.
+====
+
+== Knowledge Engineering Guidelines
+
+Knowledge engineering is the process of encoding your understanding of a domain into the fuzzy system. This is where your project becomes unique and demonstrates your expertise.
+
+=== Choosing Your Domain Ranges
+
+Your domain ranges should reflect realistic values for your problem. Ask yourself:
+
+* What is the minimum possible value?
+* What is the maximum?
+* What values are typical?
+
+=== Defining Set Boundaries
+
+The boundaries between your fuzzy sets encode your expertise. Consider:
+
+* At what point does "close" become "medium"?
+* When does "medium" become "far"?
+* There's no single right answer—your knowledge of the domain should guide these decisions.
+
+[IMPORTANT]
+====
+Fuzzy sets should overlap. If you have sets for "low" (0–40), "medium" (30–70), and "high" (60–100), a value of 35 would have partial membership in both "low" and "medium." This overlap is what makes fuzzy logic work—it handles the gradual transitions that crisp logic cannot.
+====
+
+=== Designing Rules
+
+Your rules should reflect intuitive reasoning. Think through each combination and ask: "If input1 is X and input2 is Y, what should the output be?"
+
+Recommended approach:
+
+. Start with the extremes (both inputs low, both inputs high)—these are usually clearest
+. Fill in the middle cases, ensuring smooth transitions
+. Check for contradictions or unexpected gaps in your logic
+. Consider edge cases: what happens when one input is extreme and the other is average?
+
+== Requirements Checklist
+
+Before submitting, verify that your project meets all requirements:
+
+[cols="2,4,^1",options="header"]
+|===
+|Requirement |Details |Check
+
+|Problem Statement
+|Clear linguistic statement of your problem
+|☐
+
+|3+ Variables
+|At least 2 antecedents and 1 consequent
+|☐
+
+|3 Sets per Variable
+|Each variable has at least 3 fuzzy sets
+|☐
+
+|Domain Ranges
+|Meaningful numerical ranges for each variable
+|☐
+
+|Membership Functions
+|Both shoulder (S) and triangular (R) functions used
+|☐
+
+|Membership Graphs
+|Saved images of combined membership functions
+|☐
+
+|9+ Rules
+|Complete rule base covering all antecedent combinations
+|☐
+
+|Test Demonstrations
+|Multiple example values with printed outputs
+|☐
+
+|300+ Word Write-up
+|Explanation of system, knowledge engineering, and results
+|☐
+|===
+
+=== Extra Credit Opportunities
+
+[cols="1,3",options="header"]
+|===
+|Option |Description
+
+|Hedges
+|Use linguistic hedges like "very," "slightly," or "extremely"
+
+|Additional Functions
+|Implement trapezoidal or Gaussian membership functions
+
+|Third Antecedent
+|Add a third input variable (requires 27 rules)
+|===
+
+== Write-up Guide
+
+Your 300+ word write-up should address four key areas:
+
+=== Part 1: System Overview (75+ words)
+
+Describe your fuzzy system and the problem it solves. What are your input and output variables? Why is fuzzy logic appropriate for this problem? What makes crisp thresholds inadequate here?
+
+=== Part 2: Knowledge Engineering (100+ words)
+
+Explain how you designed your membership functions and rules. Why did you choose these specific domain ranges? How did you decide where one category ends and another begins? What expertise or research informed your decisions?
+
+=== Part 3: Real-World Application (75+ words)
+
+Describe how your system could be deployed in a real-world setting. What sensors or inputs would it need? What actions would the output control? Who would benefit from using this system?
+
+=== Part 4: Results Interpretation (50+ words)
+
+Analyze your test outputs. Do the results match your intuition? Were there any surprising outputs? How well does the system capture the nuanced decision-making you intended?
+
+[TIP]
+====
+Write in clear, technical prose. Avoid filler content. Every sentence should add value. If you're struggling to reach 300 words, dig deeper into your knowledge engineering rationale—that's where the substance is.
+====
+
+== Quick Reference
+
+=== Essential Imports
+
+[source,python]
+----
+from fuzzylogic.classes import Domain, Set, Rule
+from fuzzylogic.functions import R, S
+import matplotlib.pyplot as plt
+----
+
+=== Membership Function Syntax
+
+[source,python]
+----
+# Left shoulder (for lowest category)
+domain.low = S(start, end)
+
+# Triangular (for middle categories)
+domain.medium = R(left, peak, right)
+
+# Right shoulder (for highest category)
+domain.high = S(start, end)
+----
+
+=== Rule Definition Syntax
+
+[source,python]
+----
+rules = Rule({
+    (antecedent1.set, antecedent2.set): consequent.set,
+    # ... one entry per combination
+})
+----
+
+=== Evaluation Syntax
+
+[source,python]
+----
+# Get crisp output from crisp inputs
+result = rules(antecedent1(value1), antecedent2(value2))
+print(f"Output: {result}")
+----
+
+=== Saving Graphs
+
+[source,python]
+----
+# Plot membership functions
+domain.plot()
+plt.savefig("membership_graph.png")
+----
+
+'''
+
+Good luck with your project! The best fuzzy systems come from genuine domain knowledge. Choose a problem you understand, think carefully about your categories and rules, and your system will reflect that expertise.
